@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Integer, Enum, DateTime, Text
+# app/models/user.py
+from sqlalchemy import Column, String, Integer, Enum, DateTime, Text,Boolean
 from sqlalchemy.orm import relationship
 from .base import BaseModel
 import enum
+from sqlalchemy.sql import func
 
 class UserLevel(enum.Enum):
     FREE = "free"
@@ -13,15 +15,23 @@ class UserStatus(enum.Enum):
     INACTIVE = "inactive"
     FROZEN = "frozen"
 
+    
+
+    
+
 class User(BaseModel):
     __tablename__ = "users"
     __table_args__ = {'comment': '用户表'}
+
+    id = Column(Integer, primary_key=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, index=True)
     
     username = Column(String(50), unique=True, index=True, nullable=False, comment="用户名")
     email = Column(String(100), unique=True, index=True, nullable=True, comment="邮箱")
     phone = Column(String(20), unique=True, index=True, nullable=True, comment="手机号")
     password_hash = Column(String(255), nullable=False, comment="密码哈希")
-    
+    is_active = Column(Boolean, default=True, comment="是否活跃")
+     
     nickname = Column(String(50), nullable=True, comment="昵称")
     avatar_url = Column(String(255), nullable=True, comment="头像URL")
     bio = Column(Text, nullable=True, comment="个人简介")
@@ -31,6 +41,11 @@ class User(BaseModel):
     
     member_expires_at = Column(DateTime(timezone=True), nullable=True, comment="会员到期时间")
     
+    version = Column(Integer, default=1, comment="版本")
+    is_deleted = Column(Boolean, default=False, comment="是否删除")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), comment="更新时间")
     total_accounts = Column(Integer, default=0, comment="账本总数")
     total_records = Column(Integer, default=0, comment="记录总数")
     last_login_at = Column(DateTime(timezone=True), nullable=True, comment="最后登录时间")

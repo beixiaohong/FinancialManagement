@@ -1,9 +1,11 @@
 # app/models/account.py
-from sqlalchemy import Column, String, Integer, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, Text, ForeignKey, Enum,Boolean,DateTime, Numeric
 from sqlalchemy.types import DECIMAL  # 修改这行
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .base import BaseModel
 import enum
+
 
 class AccountType(enum.Enum):
     PERSONAL = "personal"    # 个人账本
@@ -14,6 +16,9 @@ class AccountType(enum.Enum):
 class Account(BaseModel):
     __tablename__ = "accounts"
     __table_args__ = {'comment': '账本表'}
+
+    id = Column(Integer, primary_key=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, index=True)
     
     # 基础信息
     name = Column(String(100), nullable=False, comment="账本名称")
@@ -29,10 +34,16 @@ class Account(BaseModel):
     total_income = Column(DECIMAL(15, 2), default=0, comment="总收入")
     total_expense = Column(DECIMAL(15, 2), default=0, comment="总支出")
     total_records = Column(Integer, default=0, comment="记录总数")
+    balance = Column(Numeric(12, 2), default=0, comment="余额")
     member_count = Column(Integer, default=1, comment="成员数量")
     
     # 创建者
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="创建者ID")
+    version = Column(Integer, default=1, comment="版本")
+    is_deleted = Column(Boolean, default=False, comment="是否删除")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), comment="更新时间")
     
     # 关联关系
     owner = relationship("User", back_populates="accounts")
@@ -40,3 +51,4 @@ class Account(BaseModel):
     payment_accounts = relationship("PaymentAccount", back_populates="account", cascade="all, delete-orphan")
     records = relationship("Record", back_populates="account", cascade="all, delete-orphan")
     categories = relationship("Category", back_populates="account", cascade="all, delete-orphan")
+

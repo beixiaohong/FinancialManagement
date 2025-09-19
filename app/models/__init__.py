@@ -10,3 +10,5 @@ from .category import Category
 from .payment_account import PaymentAccount
 from .record import Record
 from .admin_log import AdminLog
+from .devices import Device
+from .sync_logs import SyncLog

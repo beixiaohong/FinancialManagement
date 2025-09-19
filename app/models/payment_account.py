@@ -1,8 +1,10 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, Boolean, Text
+# app/models/payment_account.py
+from sqlalchemy import DateTime, Column, String, Integer, ForeignKey, Enum, Boolean, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import DECIMAL
+from sqlalchemy.sql import func
 from .base import BaseModel
-import enum
+import enum    
 
 class PaymentAccountType(enum.Enum):
     SAVINGS = "savings"
@@ -12,6 +14,9 @@ class PaymentAccountType(enum.Enum):
 class PaymentAccount(BaseModel):
     __tablename__ = "payment_accounts"
     __table_args__ = {'comment': '支付账户表'}
+
+    id = Column(Integer, primary_key=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, index=True)
     
     name = Column(String(100), nullable=False, comment="账户名称")
     account_type = Column(Enum(PaymentAccountType), nullable=False, comment="账户类型")
@@ -30,6 +35,14 @@ class PaymentAccount(BaseModel):
     is_active = Column(Boolean, default=True, comment="是否启用")
     
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, comment="账本ID")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="创建人")
+
+    version = Column(Integer, default=1, comment="版本")
+    is_deleted = Column(Boolean, default=False, comment="是否删除")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), comment="更新时间")
+
     
     account = relationship("Account", back_populates="payment_accounts")
     

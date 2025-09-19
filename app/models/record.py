@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, Text, Boolean
+# app/models/record.py
+from sqlalchemy import Column, String, JSON, Integer, ForeignKey, Enum, DateTime, Text, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import DECIMAL
 from .base import BaseModel
+from sqlalchemy.sql import func
 import enum
 
 class RecordType(enum.Enum):
@@ -12,6 +14,9 @@ class RecordType(enum.Enum):
 class Record(BaseModel):
     __tablename__ = "records"
     __table_args__ = {'comment': '记账记录表'}
+
+    id = Column(Integer, primary_key=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, index=True)
     
     record_type = Column(Enum(RecordType), nullable=False, comment="记录类型")
     amount = Column(DECIMAL(15, 2), nullable=False, comment="金额")
@@ -25,17 +30,28 @@ class Record(BaseModel):
     
     target_payment_account_id = Column(Integer, ForeignKey("payment_accounts.id"), nullable=True, comment="目标账户ID")
     transfer_fee = Column(DECIMAL(10, 2), default=0, comment="手续费")
-    
-    tags = Column(Text, nullable=True, comment="标签（JSON格式）")
+
+    type = Column(String(50))  # income / expense
+
+
+    tags = Column(JSON, nullable=True, comment="标签（JSON格式）")
     location = Column(String(255), nullable=True, comment="消费地点")
     weather = Column(String(50), nullable=True, comment="天气情况")
     mood = Column(String(50), nullable=True, comment="心情")
     
     project_name = Column(String(100), nullable=True, comment="关联项目")
-    related_people = Column(Text, nullable=True, comment="关联人员（JSON格式）")
-    
-    images = Column(Text, nullable=True, comment="图片URLs（JSON格式）")
-    
+    related_people = Column(JSON, nullable=True, comment="关联人员（JSON格式）")
+
+    images = Column(JSON, nullable=True, comment="图片URLs（JSON格式）")
+    metadata = Column(JSON, default={}, comment="元数据")
+
+    version = Column(Integer, default=1, comment="版本")
+    is_deleted = Column(Boolean, default=False, comment="是否删除")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), comment="更新时间")
+
+
     account = relationship("Account", back_populates="records")
     creator = relationship("User", back_populates="records")
     
