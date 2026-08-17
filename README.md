@@ -1,4 +1,4 @@
-# FinancialManagement
+# FinancialManagement多人记账多端协同
 ### 安装库 
     #启动命令
     python3 run.py                                                      
